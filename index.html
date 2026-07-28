@@ -187,8 +187,8 @@
 </div>
 
 <script>
-  // Master Data 38 Provinsi di Indonesia SBM Terbaru
-  const dataSBM = {
+  // Master Data 38 Provinsi di Indonesia Terbaru
+  const data = {
     "ACEH": { harian: 360000, tiket: { bisnis: 20000000, ekonomi: 12500000 }, taksi: 127000, penginapan: { pejabat_negara: 4420000, eselon2: 3526000, eselon3: 1533000, eselon4: 770000 } },
     "SUMATERA UTARA": { harian: 370000, tiket: { bisnis: 18000000, ekonomi: 12500000 }, taksi: 308000, penginapan: { pejabat_negara: 4960000, eselon2: 2195000, eselon3: 1100000, eselon4: 699000 } },
     "RIAU": { harian: 370000, tiket: { bisnis: 31000000, ekonomi: 12000000 }, taksi: 101000, penginapan: { pejabat_negara: 3820000, eselon2: 3119000, eselon3: 1650000, eselon4: 852000 } },
@@ -264,7 +264,7 @@
       optMaluku.innerText = "PROVINSI MALUKU";
       selectAsal.appendChild(optMaluku);
 
-      for (let key in dataSBM) {
+      for (let key in data) {
         if (key !== "MALUKU") {
           let opt = document.createElement('option');
           opt.value = key;
@@ -290,7 +290,7 @@
     const selectTujuan = document.getElementById('tujuan');
     selectTujuan.innerHTML = '';
 
-    const dataSource = (jenis === 'luar_provinsi') ? dataSBM : dataDalamProvinsi;
+    const dataSource = (jenis === 'luar_provinsi') ? data : dataDalamProvinsi;
 
     for (let key in dataSource) {
       if (key !== asal) {
@@ -320,7 +320,7 @@
     }
 
     const malam = hari > 1 ? hari - 1 : 0;
-    const dataSource = (jenis === 'luar_provinsi') ? dataSBM : dataDalamProvinsi;
+    const dataSource = (jenis === 'luar_provinsi') ? data : dataDalamProvinsi;
 
     const dataAsal = dataSource[asal];
     const dataTujuan = dataSource[tujuan];
