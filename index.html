@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>:
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalkulator Perjalanan Dinas</title>
+  <style>
+    :root {
+      --primary-color: #0d6efd;
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-color: #212529;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      max-width: 650px;
+      width: 100%;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: var(--primary-color);
+      text-align: center;
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 0.9rem;
+    }
+
+    .route-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    button {
+      width: 100%;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+
+    button:hover {
+      background-color: #0b5ed7;
+    }
+
+    .result-card {
+      margin-top: 20px;
+      padding: 16px;
+      background-color: #e7f1ff;
+      border-radius: 8px;
+      border-left: 4px solid var(--primary-color);
+      display: none;
+    }
+
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    .result-total {
+      border-top: 1px solid #b6d4fe;
+      padding-top: 10px;
+      margin-top: 8px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: #0a58ca;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Kalkulator Perjalanan Dinas</h2>
+  <form id="spdForm">
+    <div class="form-group">
+      <label for="jenisPerjalanan">Kategori Perjalanan Dinas</label>
+      <select id="jenisPerjalanan" onchange="updateFormControls()" required>
+        <option value="luar_provinsi">Perjalanan Dinas Luar Provinsi</option>
+        <option value="dalam_provinsi">Perjalanan Dinas Kabupaten/Kota Dalam Provinsi Maluku</option>
+      </select>
+    </div>
+
+    <div class="route-grid">
+      <div class="form-group">
+        <label for="asal">Asal Keberangkatan</label>
+        <select id="asal" onchange="updateTujuanList()" required></select>
+      </div>
+      <div class="form-group">
+        <label for="tujuan">Tujuan Perjalanan</label>
+        <select id="tujuan" required></select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="jabatan">Jabatan / Golongan</label>
+      <select id="jabatan" required>
+        <option value="pejabat_negara">Pejabat Negara / Daerah / Pimpinan DPRD / Eselon I</option>
+        <option value="eselon2">Anggota DPRD / Pejabat Eselon II</option>
+        <option value="eselon3">Pejabat Eselon III / Golongan IV</option>
+        <option value="eselon4">Pejabat Eselon IV / Golongan III, II, I</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="kelasTiket">Kelas Tiket Transportasi</label>
+      <select id="kelasTiket" required>
+        <option value="ekonomi">Ekonomi</option>
+        <option value="bisnis">Bisnis</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="hari">Lama Perjalanan Dinas (Hari)</label>
+      <input type="number" id="hari" min="1" value="1" required>
+    </div>
+
+    <button type="button" onclick="hitungBiaya()">Hitung Biaya Dinas</button>
+  </form>
+
+  <div id="result" class="result-card">
+    <div class="result-item">
+      <span>Uang Harian (Luar Kota):</span>
+      <span id="resHarian">Rp 0</span>
+    </div>
+    <div class="result-item">
+      <span>Biaya Penginapan/Hotel:</span>
+      <span id="resPenginapan">Rp 0</span>
+    </div>
+    <div class="result-item">
+      <span>Biaya Tiket:</span>
+      <span id="resTiket">Rp 0</span>
+    </div>
+    <div class="result-item">
+      <span>Biaya Taksi (Asal + Tujuan PP):</span>
+      <span id="resTaksi">Rp 0</span>
+    </div>
+    <div class="result-item">
+      <span>Uang Representatif:</span>
+      <span id="resRepresentasi">Rp 0</span>
+    </div>
+    <div class="result-total result-item">
+      <span>Total Estimasi Biaya:</span>
+      <span id="resTotal">Rp 0</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Master Data 38 Provinsi di Indonesia SBM Terbaru
+  const dataSBM = {
+    "ACEH": { harian: 360000, tiket: { bisnis: 20000000, ekonomi: 12500000 }, taksi: 127000, penginapan: { pejabat_negara: 4420000, eselon2: 3526000, eselon3: 1533000, eselon4: 770000 } },
+    "SUMATERA UTARA": { harian: 370000, tiket: { bisnis: 18000000, ekonomi: 12500000 }, taksi: 308000, penginapan: { pejabat_negara: 4960000, eselon2: 2195000, eselon3: 1100000, eselon4: 699000 } },
+    "RIAU": { harian: 370000, tiket: { bisnis: 31000000, ekonomi: 12000000 }, taksi: 101000, penginapan: { pejabat_negara: 3820000, eselon2: 3119000, eselon3: 1650000, eselon4: 852000 } },
+    "KEPULAUAN RIAU": { harian: 370000, tiket: { bisnis: 29000000, ekonomi: 11855000 }, taksi: 165000, penginapan: { pejabat_negara: 5344000, eselon2: 2318000, eselon3: 1297000, eselon4: 792000 } },
+    "JAMBI": { harian: 370000, tiket: { bisnis: 16200000, ekonomi: 12200000 }, taksi: 147000, penginapan: { pejabat_negara: 5000000, eselon2: 4102000, eselon3: 1225000, eselon4: 580000 } },
+    "SUMATERA BARAT": { harian: 380000, tiket: { bisnis: 32000000, ekonomi: 12300000 }, taksi: 190000, penginapan: { pejabat_negara: 5236000, eselon2: 3332000, eselon3: 1353000, eselon4: 701000 } },
+    "SUMATERA SELATAN": { harian: 380000, tiket: { bisnis: 31395000, ekonomi: 10300000 }, taksi: 179000, penginapan: { pejabat_negara: 5850000, eselon2: 3083000, eselon3: 1955000, eselon4: 861000 } },
+    "LAMPUNG": { harian: 380000, tiket: { bisnis: 33500000, ekonomi: 10500000 }, taksi: 168000, penginapan: { pejabat_negara: 4491000, eselon2: 2488000, eselon3: 1425000, eselon4: 580000 } },
+    "BENGKULU": { harian: 380000, tiket: { bisnis: 30000000, ekonomi: 10855000 }, taksi: 109000, penginapan: { pejabat_negara: 2140000, eselon2: 1628000, eselon3: 1546000, eselon4: 692000 } },
+    "BANGKA BELITUNG": { harian: 410000, tiket: { bisnis: 28800000, ekonomi: 11000000 }, taksi: 97000, penginapan: { pejabat_negara: 3827000, eselon2: 2838000, eselon3: 1957000, eselon4: 649000 } },
+    "BANTEN": { harian: 370000, tiket: { bisnis: 13285000, ekonomi: 7081000 }, taksi: 536000, penginapan: { pejabat_negara: 5725000, eselon2: 2373000, eselon3: 1204000, eselon4: 724000 } },
+    "JAWA BARAT": { harian: 430000, tiket: { bisnis: 13285000, ekonomi: 7081000 }, taksi: 200000, penginapan: { pejabat_negara: 5381000, eselon2: 2755000, eselon3: 1201000, eselon4: 686000 } },
+    "D.K.I JAKARTA": { harian: 530000, tiket: { bisnis: 13285000, ekonomi: 7081000 }, taksi: 256000, penginapan: { pejabat_negara: 8720000, eselon2: 2063000, eselon3: 992000, eselon4: 730000 } },
+    "JAWA TENGAH": { harian: 370000, tiket: { bisnis: 16600000, ekonomi: 10500000 }, taksi: 108000, penginapan: { pejabat_negara: 5303000, eselon2: 1850000, eselon3: 1201000, eselon4: 750000 } },
+    "D.I YOGYAKARTA": { harian: 420000, tiket: { bisnis: 27000000, ekonomi: 10700000 }, taksi: 267000, penginapan: { pejabat_negara: 5017000, eselon2: 2695000, eselon3: 1384000, eselon4: 845000 } },
+    "JAWA TIMUR": { harian: 410000, tiket: { bisnis: 8803000, ekonomi: 4845000 }, taksi: 233000, penginapan: { pejabat_negara: 4449000, eselon2: 2007000, eselon3: 1153000, eselon4: 814000 } },
+    "BALI": { harian: 480000, tiket: { bisnis: 8054000, ekonomi: 4471000 }, taksi: 227000, penginapan: { pejabat_negara: 6848000, eselon2: 2433000, eselon3: 1685000, eselon4: 1138000 } },
+    "NUSA TENGGARA BARAT": { harian: 440000, tiket: { bisnis: 35000000, ekonomi: 11800000 }, taksi: 231000, penginapan: { pejabat_negara: 4375000, eselon2: 2648000, eselon3: 1418000, eselon4: 907000 } },
+    "NUSA TENGGARA TIMUR": { harian: 430000, tiket: { bisnis: 28013000, ekonomi: 13100000 }, taksi: 116000, penginapan: { pejabat_negara: 3750000, eselon2: 2133000, eselon3: 1355000, eselon4: 688000 } },
+    "KALIMANTAN BARAT": { harian: 380000, tiket: { bisnis: 29500000, ekonomi: 14600000 }, taksi: 171000, penginapan: { pejabat_negara: 2654000, eselon2: 1923000, eselon3: 1125000, eselon4: 538000 } },
+    "KALIMANTAN TENGAH": { harian: 360000, tiket: { bisnis: 30000000, ekonomi: 14000000 }, taksi: 134000, penginapan: { pejabat_negara: 4901000, eselon2: 3391000, eselon3: 1160000, eselon4: 659000 } },
+    "KALIMANTAN SELATAN": { harian: 380000, tiket: { bisnis: 35500000, ekonomi: 14000000 }, taksi: 180000, penginapan: { pejabat_negara: 4797000, eselon2: 3316000, eselon3: 1500000, eselon4: 697000 } },
+    "KALIMANTAN TIMUR": { harian: 430000, tiket: { bisnis: 30000000, ekonomi: 13000000 }, taksi: 533000, penginapan: { pejabat_negara: 4000000, eselon2: 2188000, eselon3: 1507000, eselon4: 804000 } },
+    "KALIMANTAN UTARA": { harian: 430000, tiket: { bisnis: 30000000, ekonomi: 14000000 }, taksi: 218000, penginapan: { pejabat_negara: 4000000, eselon2: 2735000, eselon3: 1507000, eselon4: 904000 } },
+    "SULAWESI UTARA": { harian: 370000, tiket: { bisnis: 41200000, ekonomi: 12800000 }, taksi: 138000, penginapan: { pejabat_negara: 4919000, eselon2: 2290000, eselon3: 1207000, eselon4: 978000 } },
+    "GORONTALO": { harian: 370000, tiket: { bisnis: 40000000, ekonomi: 8100000 }, taksi: 265000, penginapan: { pejabat_negara: 4168000, eselon2: 3107000, eselon3: 1606000, eselon4: 955000 } },
+    "SULAWESI BARAT": { harian: 410000, tiket: { bisnis: 9500000, ekonomi: 7000000 }, taksi: 313000, penginapan: { pejabat_negara: 4076000, eselon2: 3098000, eselon3: 1344000, eselon4: 704000 } },
+    "SULAWESI SELATAN": { harian: 430000, tiket: { bisnis: 6022000, ekonomi: 3455000 }, taksi: 187000, penginapan: { pejabat_negara: 4820000, eselon2: 1938000, eselon3: 1423000, eselon4: 745000 } },
+    "SULAWESI TENGAH": { harian: 370000, tiket: { bisnis: 6140000, ekonomi: 3508000 }, taksi: 165000, penginapan: { pejabat_negara: 2309000, eselon2: 2027000, eselon3: 1679000, eselon4: 951000 } },
+    "SULAWESI TENGGARA": { harian: 380000, tiket: { bisnis: 4824000, ekonomi: 2856000 }, taksi: 171000, penginapan: { pejabat_negara: 3088800, eselon2: 2574000, eselon3: 1297000, eselon4: 786000 } },
+    "MALUKU": { harian: 380000, tiket: { bisnis: 0, ekonomi: 0 }, taksi: 288000, penginapan: { pejabat_negara: 3467000, eselon2: 3240000, eselon3: 1059000, eselon4: 667000 } },
+    "MALUKU UTARA": { harian: 430000, tiket: { bisnis: 4022000, ekonomi: 2449000 }, taksi: 215000, penginapan: { pejabat_negara: 4611600, eselon2: 3843000, eselon3: 1160000, eselon4: 605000 } },
+    "PAPUA": { harian: 580000, tiket: { bisnis: 7434000, ekonomi: 4161000 }, taksi: 513000, penginapan: { pejabat_negara: 3859000, eselon2: 3318000, eselon3: 2521000, eselon4: 1038000 } },
+    "PAPUA BARAT": { harian: 480000, tiket: { bisnis: 5177000, ekonomi: 3027000 }, taksi: 236000, penginapan: { pejabat_negara: 3872000, eselon2: 3341000, eselon3: 2056000, eselon4: 967000 } },
+    "PAPUA BARAT DAYA": { harian: 480000, tiket: { bisnis: 3637000, ekonomi: 2257000 }, taksi: 236000, penginapan: { pejabat_negara: 3872000, eselon2: 3341000, eselon3: 2056000, eselon4: 967000 } },
+    "PAPUA TENGAH": { harian: 580000, tiket: { bisnis: 15300000, ekonomi: 12000000 }, taksi: 513000, penginapan: { pejabat_negara: 3859000, eselon2: 3318000, eselon3: 2521000, eselon4: 1038000 } },
+    "PAPUA SELATAN": { harian: 580000, tiket: { bisnis: 19500000, ekonomi: 17500000 }, taksi: 513000, penginapan: { pejabat_negara: 5673000, eselon2: 4877000, eselon3: 3706000, eselon4: 1526000 } },
+    "PAPUA PEGUNUNGAN": { harian: 580000, tiket: { bisnis: 16200000, ekonomi: 14200000 }, taksi: 513000, penginapan: { pejabat_negara: 5711000, eselon2: 4911000, eselon3: 3731000, eselon4: 1536000 } }
+  };
+
+  // Data Perjalanan Dalam Provinsi Maluku (Inter Kab/Kota)
+  const dataDalamProvinsi = {
+    "KOTA AMBON (PROVINSI)": { harian: 380000, tiket: { bisnis: 0, ekonomi: 0 }, taksi: 288000, penginapan: { pejabat_negara: 3467000, eselon2: 3240000, eselon3: 1059000, eselon4: 667000 } },
+    "KOTA TUAL": { harian: 380000, tiket: { bisnis: 4500000, ekonomi: 3500000 }, taksi: 250000, penginapan: { pejabat_negara: 2500000, eselon2: 2000000, eselon3: 1200000, eselon4: 700000 } },
+    "KABUPATEN MALUKU TENGGARA": { harian: 380000, tiket: { bisnis: 4500000, ekonomi: 3500000 }, taksi: 250000, penginapan: { pejabat_negara: 2500000, eselon2: 2000000, eselon3: 1200000, eselon4: 700000 } },
+    "KABUPATEN KEPULAUAN TANIMBAR": { harian: 380000, tiket: { bisnis: 6500000, ekonomi: 5500000 }, taksi: 300000, penginapan: { pejabat_negara: 2500000, eselon2: 2000000, eselon3: 1200000, eselon4: 700000 } },
+    "KABUPATEN KEPULAUAN ARU": { harian: 380000, tiket: { bisnis: 7000000, ekonomi: 6000000 }, taksi: 250000, penginapan: { pejabat_negara: 2500000, eselon2: 2000000, eselon3: 1200000, eselon4: 700000 } },
+    "KABUPATEN MALUKU BARAT DAYA": { harian: 380000, tiket: { bisnis: 5500000, ekonomi: 4500000 }, taksi: 300000, penginapan: { pejabat_negara: 2500000, eselon2: 2000000, eselon3: 1200000, eselon4: 700000 } },
+    "KABUPATEN MALUKU TENGAH": { harian: 380000, tiket: { bisnis: 1200000, ekonomi: 800000 }, taksi: 200000, penginapan: { pejabat_negara: 2500000, eselon2: 2000000, eselon3: 1200000, eselon4: 700000 } },
+    "KABUPATEN SERAM BAGIAN BARAT": { harian: 380000, tiket: { bisnis: 1000000, ekonomi: 700000 }, taksi: 250000, penginapan: { pejabat_negara: 2500000, eselon2: 2000000, eselon3: 1200000, eselon4: 700000 } },
+    "KABUPATEN SERAM BAGIAN TIMUR": { harian: 380000, tiket: { bisnis: 2800000, ekonomi: 2100000 }, taksi: 300000, penginapan: { pejabat_negara: 2500000, eselon2: 2000000, eselon3: 1200000, eselon4: 700000 } },
+    "KABUPATEN BURU": { harian: 380000, tiket: { bisnis: 3000000, ekonomi: 2500000 }, taksi: 250000, penginapan: { pejabat_negara: 2500000, eselon2: 2000000, eselon3: 1200000, eselon4: 700000 } },
+    "KABUPATEN BURU SELATAN": { harian: 380000, tiket: { bisnis: 1800000, ekonomi: 1400000 }, taksi: 200000, penginapan: { pejabat_negara: 2500000, eselon2: 2000000, eselon3: 1200000, eselon4: 700000 } }
+  };
+
+  const dataRepresentasi = {
+    pejabat_negara: 250000,
+    eselon1: 200000,
+    eselon2: 150000,
+    eselon3: 0,
+    eselon4: 0
+  };
+
+  function updateFormControls() {
+    const jenis = document.getElementById('jenisPerjalanan').value;
+    const selectAsal = document.getElementById('asal');
+    selectAsal.innerHTML = '';
+
+    if (jenis === 'luar_provinsi') {
+      // Default set Maluku di urutan atas untuk memudahkan
+      let optMaluku = document.createElement('option');
+      optMaluku.value = "MALUKU";
+      optMaluku.innerText = "PROVINSI MALUKU";
+      selectAsal.appendChild(optMaluku);
+
+      for (let key in dataSBM) {
+        if (key !== "MALUKU") {
+          let opt = document.createElement('option');
+          opt.value = key;
+          opt.innerText = "PROVINSI " + key;
+          selectAsal.appendChild(opt);
+        }
+      }
+    } else {
+      for (let key in dataDalamProvinsi) {
+        let opt = document.createElement('option');
+        opt.value = key;
+        opt.innerText = key;
+        selectAsal.appendChild(opt);
+      }
+    }
+
+    updateTujuanList();
+  }
+
+  function updateTujuanList() {
+    const jenis = document.getElementById('jenisPerjalanan').value;
+    const asal = document.getElementById('asal').value;
+    const selectTujuan = document.getElementById('tujuan');
+    selectTujuan.innerHTML = '';
+
+    const dataSource = (jenis === 'luar_provinsi') ? dataSBM : dataDalamProvinsi;
+
+    for (let key in dataSource) {
+      if (key !== asal) {
+        let opt = document.createElement('option');
+        opt.value = key;
+        opt.innerText = (jenis === 'luar_provinsi') ? "PROVINSI " + key : key;
+        selectTujuan.appendChild(opt);
+      }
+    }
+  }
+
+  function formatRupiah(angka) {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
+  }
+
+  function hitungBiaya() {
+    const jenis = document.getElementById('jenisPerjalanan').value;
+    const asal = document.getElementById('asal').value;
+    const tujuan = document.getElementById('tujuan').value;
+    const jabatan = document.getElementById('jabatan').value;
+    const kelasTiket = document.getElementById('kelasTiket').value;
+    const hari = parseInt(document.getElementById('hari').value) || 0;
+
+    if (!tujuan || asal === tujuan) {
+      alert("Silakan pilih provinsi/kabupaten asal dan tujuan yang berbeda!");
+      return;
+    }
+
+    const malam = hari > 1 ? hari - 1 : 0;
+    const dataSource = (jenis === 'luar_provinsi') ? dataSBM : dataDalamProvinsi;
+
+    const dataAsal = dataSource[asal];
+    const dataTujuan = dataSource[tujuan];
+
+    // 1. Biaya Uang Harian (Tarif lokasi tujuan)
+    const valHarian = dataTujuan.harian * hari;
+
+    // 2. Biaya Penginapan (Sesuai plafon batas tertinggi lokasi tujuan)
+    const valPenginapan = (dataTujuan.penginapan[jabatan] || 0) * malam;
+
+    // 3. Biaya Tiket Transport (Ekonomi / Bisnis)
+    const valTiket = dataTujuan.tiket[kelasTiket] || 0;
+
+    // 4. Biaya Taksi Lokal (Taksi daerah asal + Taksi daerah tujuan, dihitung PP)
+    const taksiAsal = dataAsal ? dataAsal.taksi : 0;
+    const taksiTujuan = dataTujuan ? dataTujuan.taksi : 0;
+    const valTaksi = (taksiAsal + taksiTujuan) * 2;
+
+    // 5. Uang Representatif (Hanya untuk Pejabat Negara / Eselon I & II)
+    const valRepresentasi = (dataRepresentasi[jabatan] || 0) * hari;
+
+    // Total Biaya
+    const totalEstimasi = valHarian + valPenginapan + valTiket + valTaksi + valRepresentasi;
+
+    // Tampilkan Hasil
+    document.getElementById('resHarian').innerText = formatRupiah(valHarian) + ` (${hari} hari)`;
+    document.getElementById('resPenginapan').innerText = formatRupiah(valPenginapan) + ` (${malam} malam)`;
+    document.getElementById('resTiket').innerText = formatRupiah(valTiket);
+    document.getElementById('resTaksi').innerText = formatRupiah(valTaksi);
+    document.getElementById('resRepresentasi').innerText = formatRupiah(valRepresentasi);
+    document.getElementById('resTotal').innerText = formatRupiah(totalEstimasi);
+
+    document.getElementById('result').style.display = 'block';
+  }
+
+  // Inisialisasi awal saat halaman dimuat
+  window.onload = updateFormControls;
+</script>
+
+</body>
+</html>
